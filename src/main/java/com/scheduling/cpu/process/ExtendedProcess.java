@@ -1,6 +1,7 @@
 package main.java.com.scheduling.cpu.process;
 
 import java.math.BigInteger;
+import java.util.Objects;
 
 public class ExtendedProcess extends SimpleProcess {
 
@@ -18,6 +19,10 @@ public class ExtendedProcess extends SimpleProcess {
 
     private int turnAroundTime;
 
+    private int remainingTime;
+
+    private int completionTime;
+
 
     public ExtendedProcess() {
         super();
@@ -34,7 +39,7 @@ public class ExtendedProcess extends SimpleProcess {
     public ExtendedProcess( int burstTime, int arrivalTime, int priority ) {
         this( burstTime, arrivalTime );
         this.priority = priority;
-        System.out.println("Process ID: " + getProcessId());
+        setRemainingTime(burstTime);
     }
 
     public ExtendedProcess(BigInteger processId, int burstTime, int arrivalTime, int priority) {
@@ -107,9 +112,42 @@ public class ExtendedProcess extends SimpleProcess {
         this.turnAroundTime = turnAroundTime;
     }
 
-    @Override
-    public String toString() {
-        return "(pid=" + super.getProcessId() + ", at=" + super.getArrivalTime() + ", bt=" + super.getBurstTime() + ",p=" + this.getPriority() + ")"  ;
+    public int getRemainingTime() {
+        return remainingTime;
     }
 
+    public void setRemainingTime(int remainingTime) {
+        this.remainingTime = remainingTime;
+    }
+
+    public int getCompletionTime() {
+        return completionTime;
+    }
+
+    public void setCompletionTime(int completionTime) {
+        this.completionTime = completionTime;
+    }
+
+    public void execute() {
+        this.remainingTime--;
+    }
+
+    @Override
+    public String toString() {
+        return "(pid=" + super.getProcessId() + ", at=" + super.getArrivalTime() + ", bt=" + super.getBurstTime() + ",p=" + this.getPriority() +
+                ",rem=" + this.getRemainingTime() + ")"  ;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ExtendedProcess process = (ExtendedProcess) o;
+        return this.getProcessId().compareTo(process.getProcessId()) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(priority);
+    }
 }
