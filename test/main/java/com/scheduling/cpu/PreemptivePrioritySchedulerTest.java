@@ -36,4 +36,23 @@ public class PreemptivePrioritySchedulerTest {
         assertArrayEquals( cpuScheduler.getWaitingTimes(), new int[]{0, 14, 0, 7, 1, 25, 16} );
         assertArrayEquals( cpuScheduler.getTurnAroundTimes(), new int[]{1, 21, 3, 13, 6, 40, 24} );
     }
+
+    @Test
+    public void testPreempPrio_valid_2() {
+        ExtendedProcess[] processes = {
+                new ExtendedProcess( 8, 0, 1),
+                new ExtendedProcess( 6, 2, 3 ),
+                new ExtendedProcess( 3,3, 3),
+                new ExtendedProcess( 9, 5, 2 ),
+                new ExtendedProcess( 3, 6, 4 )
+        };
+        cpuScheduler = new PreemptivePriorityCPUScheduler( processes );
+        cpuScheduler.computeSchedulingTimes();
+
+        System.out.println(Arrays.toString( cpuScheduler.getWaitingTimes() ));
+        System.out.println(Arrays.toString( cpuScheduler.getTurnAroundTimes() ));
+
+        assertArrayEquals( cpuScheduler.getWaitingTimes(), new int[]{0, 15, 20, 3, 20} );
+        assertArrayEquals( cpuScheduler.getTurnAroundTimes(), new int[]{8, 21, 23, 12, 23} );
+    }
 }

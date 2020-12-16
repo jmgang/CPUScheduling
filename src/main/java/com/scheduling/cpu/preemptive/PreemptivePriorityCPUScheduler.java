@@ -94,6 +94,9 @@ public class PreemptivePriorityCPUScheduler extends CPUPriorityScheduler {
             turnAroundTimes[i] = completionTimes[i] - processes[i].getArrivalTime();
             waitingTimes[i] = turnAroundTimes[i] - processes[i].getBurstTime();
         }
+
+//        System.out.println("Waiting: " + Arrays.toString( waitingTimes ));
+//        System.out.println("TurnAround: " + Arrays.toString( turnAroundTimes ));
     }
 
     @Override

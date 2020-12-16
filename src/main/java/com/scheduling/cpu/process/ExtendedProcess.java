@@ -30,6 +30,7 @@ public class ExtendedProcess extends SimpleProcess {
 
     public ExtendedProcess(int burstTime, int arrivalTime) {
         super(burstTime, arrivalTime);
+        setRemainingTime(burstTime);
     }
 
     public ExtendedProcess(BigInteger processId, int burstTime, int arrivalTime) {

@@ -7,6 +7,7 @@ import main.java.com.scheduling.cpu.nonpreemptive.ShortestJobFirstCPUScheduler;
 import main.java.com.scheduling.cpu.preemptive.PreemptivePriorityCPUScheduler;
 import main.java.com.scheduling.cpu.preemptive.RoundRobinCPUScheduler;
 import main.java.com.scheduling.cpu.preemptive.ShortestRemainingTimeFirstCPUScheduler;
+import main.java.com.scheduling.cpu.process.AbstractProcess;
 import main.java.com.scheduling.cpu.process.ExtendedProcess;
 import main.java.com.scheduling.disk.ui.DiskSchedulingUI;
 
@@ -30,10 +31,14 @@ public class SchedulingApplication {
         String choice = input("Input again (y/n)?\n", sc).trim().toLowerCase();
         if( "n".equals(choice) ) {
             isRunning = false;
+            pln("Exiting...");
         }else if( !"y".equals(choice) ) {
             pln("Sorry, cannot understand \"" + choice + "\". Please input again.");
             askToRerun(sc);
+        }else{
+            AbstractProcess.resetCounter();
         }
+
     }
 
     public void runCPUScheduling(Scanner sc, SchedulerType schedulerType) {
@@ -206,7 +211,9 @@ public class SchedulingApplication {
 
         for(int i = 0; i < turnAroundTimes.length; i++) {
             String param = ("P" + (i+1));
-            pln(String.format( "%s: %d %35s: %d", param, waitingTimes[i], param, turnAroundTimes[i] ));
+            pln(String.format( "%s: %s %35s: %s", param, (waitingTimes[i] > 9 ? waitingTimes[i]+"" : waitingTimes[i]+" "), param,
+                    ( turnAroundTimes[i] > 9 ? turnAroundTimes[i]+"" : turnAroundTimes[i]+" " )));
+
         }
 
         pln(String.format("%s: %.2f %35s: %.2f", "Average Waiting Time", scheduler.getAverageWaitingTime(),

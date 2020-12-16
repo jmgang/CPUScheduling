@@ -39,6 +39,11 @@ public abstract class CPUPriorityScheduler extends CPUScheduler {
 
     protected void computeCompletionTimes() {
 
+//        System.out.println("Gannt Chart:");
+//        for( Map.Entry<Integer, ExtendedProcess> entry : ganttChart.entrySet() ) {
+//            System.out.println("t=" + entry.getKey() + ",p=" + entry.getValue());
+//        }
+
         Integer[] keys = ganttChart.keySet().toArray( new Integer[ganttChart.keySet().size()] );
         Set<ExtendedProcess> processesWithCompletionTime = new HashSet<>();
 

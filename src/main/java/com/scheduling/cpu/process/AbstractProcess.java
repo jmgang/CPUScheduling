@@ -17,6 +17,8 @@ public abstract class AbstractProcess {
         return processId;
     }
 
-
+    public static void resetCounter() {
+        counter = BigInteger.ZERO;
+    }
 
 }
