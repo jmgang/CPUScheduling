@@ -19,18 +19,31 @@ public class DiskSchedulingUI {
     private DiskSchedulingUI() {}
 
     public void showUI( Scanner sc ) {
-        String currentPositionStr = SchedulingApplication.input( "Input current position: ", sc );
-        String tracksizeStr = SchedulingApplication.input("Input track size: ", sc);
-        String seekRateStr = SchedulingApplication.input("Input seek rate: ", sc);
-        String numberOfRequestsStr = SchedulingApplication.input("Input number of request: ", sc);
+        String currentPositionStr = "";
+        String tracksizeStr = "";
+        String seekRateStr = "";
+        String numberOfRequestsStr = "";
 
-        validateInputs(currentPositionStr, tracksizeStr, seekRateStr, numberOfRequestsStr);
+        do {
+            currentPositionStr = SchedulingApplication.input( "Input current position: ", sc );
+        }while( !SchedulingApplication.isValidInteger(currentPositionStr) );
+
+        do {
+            tracksizeStr = SchedulingApplication.input("Input track size: ", sc);
+        }while( !SchedulingApplication.isValidInteger(tracksizeStr) );
+
+        do {
+            seekRateStr = SchedulingApplication.input("Input seek rate: ", sc);
+        }while( !SchedulingApplication.isValidInteger(seekRateStr) );
+
+        do {
+            numberOfRequestsStr = SchedulingApplication.input("Input number of request <max of 10 requests>: ", sc);
+        }while( !SchedulingApplication.isWithinRange(numberOfRequestsStr, 1, 10) );
 
         int numberOfRequests = Integer.parseInt(numberOfRequestsStr);
-        List<BigInteger> requests = convertToBigIntegers(SchedulingApplication.loopInput("", "Loc", numberOfRequests, sc));
-
         BigInteger trackSize = new BigInteger(tracksizeStr);
-        validateRequests( requests, trackSize );
+        List<BigInteger> requests = convertToBigIntegers(SchedulingApplication.loopInputWithRangeValidation("", "Loc", numberOfRequests,
+                sc, 1, trackSize.intValue()-1));
 
         displayDiskSchedulingAlgorithmsMenu();
         runScheduler( new BigInteger(currentPositionStr), new BigInteger(seekRateStr), trackSize, requests, sc );
@@ -38,7 +51,12 @@ public class DiskSchedulingUI {
     }
 
     private void runScheduler( BigInteger currentPosition, BigInteger seekRate, BigInteger trackSize, List<BigInteger> requests, Scanner sc) {
-        String choice = SchedulingApplication.input("Enter choice: ", sc).trim().toUpperCase();
+        String choice = "";
+
+        do {
+            choice = SchedulingApplication.input("Enter choice: ", sc).trim().toUpperCase();
+        }while( !SchedulingApplication.isChoiceInTheChoices( choice, "A", "B", "C", "D" ) );
+
         switch( choice ) {
             case "A":
                 diskScheduler = new FirstComeFirstServeScheduler(currentPosition, requests, seekRate);
@@ -48,7 +66,12 @@ public class DiskSchedulingUI {
                 break;
             case "C":
                 ScanDirection scanDirection = ScanDirection.LEFT;
-                String direction = SchedulingApplication.input(String.format("Input Direction: \n[A] Towards 0\n[B] Towards %d\nEnter choice: ", trackSize.subtract(BigInteger.ONE)), sc);
+                String direction = "";
+                do {
+                    direction = SchedulingApplication.input(String.format("Input Direction: \n[A] Towards 0\n[B] Towards %d\nEnter choice: ",
+                            trackSize.subtract(BigInteger.ONE)), sc);
+                }while(!SchedulingApplication.isChoiceInTheChoices(direction, "A", "B"));
+
                 if( "B".equals(direction.trim().toUpperCase()) ) {
                     scanDirection = ScanDirection.RIGHT;
                 }
@@ -79,18 +102,11 @@ public class DiskSchedulingUI {
         return convertedInputs;
     }
 
-    private void validateInputs(String currentPosition, String trackSize, String seekRate, String numberOfRequests) {
-
-    }
-
-    private void validateRequests( List<BigInteger> requests, BigInteger trackSize ) {
-
-    }
 
     private void displayDiskSchedulingAlgorithmsMenu() {
         final StringBuilder diskSchedulingMenu = new StringBuilder("Disk Scheduling Algorithm:\n");
         diskSchedulingMenu.append("[A] First Come First Serve (FCFS)\n").append("[B] Shortest Seek Time First (SSTF)\n")
-                .append("[C] Scan\n");
+                .append("[C] Scan\n").append("[D] Exit\n");
         SchedulingApplication.pln(diskSchedulingMenu.toString());
     }
 

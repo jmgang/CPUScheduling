@@ -11,10 +11,7 @@ import main.java.com.scheduling.cpu.process.ExtendedProcess;
 import main.java.com.scheduling.disk.ui.DiskSchedulingUI;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class SchedulingApplication {
@@ -41,8 +38,13 @@ public class SchedulingApplication {
 
     public void runCPUScheduling(Scanner sc, SchedulerType schedulerType) {
         CPUScheduler scheduler = null;
-        // preemptive
-        int numberOfProcesses = Integer.parseInt(input("Input no. of processes [2-9]: ", sc));
+        String numberOfProcessesStr = "";
+        do {
+            numberOfProcessesStr = input("Input no. of processes [2-9]: ", sc);
+        }while( !isWithinRange( numberOfProcessesStr, 2, 9 ) );
+
+
+        int numberOfProcesses = Integer.parseInt(numberOfProcessesStr);
         List<ExtendedProcess> processes = new ArrayList<>();
         List<Integer> arrivalTimes = loopInput("Input individual arrival time: ", "AT", numberOfProcesses, sc);
         List<Integer> burstTimes = loopInput("Input individual burst time: ", "BT", numberOfProcesses, sc);
@@ -61,11 +63,34 @@ public class SchedulingApplication {
         displayCPUSchedulingOutput(scheduler);
     }
 
+    public static boolean isValidInteger( final String input ) {
+        try {
+            Integer.parseInt(input);
+            return true;
+        }catch(NumberFormatException nfe) {
+            pln("Wrong input. Please input a number.");
+            return false;
+        }
+    }
+
+    public static boolean isWithinRange( final String input, int low, int high ) {
+        if(!isValidInteger(input)) return false;
+        int in = Integer.parseInt(input);
+        if( low <= in && in <= high ) return true;
+        else {
+            pln(String.format("Input not within range. Should be from %d to %d", low, high));
+            return false;
+        }
+    }
+
     public void run( Scanner sc ) {
         final StringBuilder menu = new StringBuilder("Choose Scheduling type: \n");
         menu.append("[A] Preemptive CPU Scheduling\n[B] Non-Preemptive CPU Scheduling\n[C] Disk Scheduling\n[D] Exit\n");
         pln(menu.toString());
-        final String choice = input("Enter choice: ", sc).trim();
+        String choice = "";
+        do {
+            choice = input("Enter choice: ", sc);
+        }while( !isChoiceInTheChoices(choice, "A", "B", "C", "D") );
 
         SchedulerType schedulerType = null;
         switch (choice) {
@@ -77,7 +102,7 @@ public class SchedulingApplication {
                 break;
             case "C":
                 break;
-            default:
+            default: //implicit D
                 exit();
         }
 
@@ -97,10 +122,12 @@ public class SchedulingApplication {
     public CPUScheduler displayNonPreemptiveCPUSchedulingMenu(List<ExtendedProcess> processes, Scanner sc) {
         CPUScheduler scheduler = null;
         displayCPUSchedulingAlgorithmsMenu( SchedulerType.NON_PREEMPTIVE );
-        String choice = input("Enter choice: ", sc);
+        String choice = "";
 
-        // TODO assuming preemptive
-        // TODO REFACTOR ROUND ROBIN - WRONG? should be sorted?
+        do {
+            choice = input("Enter choice: ", sc);
+        }while( !isChoiceInTheChoices(choice, "A", "B", "C", "D") );
+
         switch(choice.trim()) {
             case "A":
                 scheduler = new FirstComeFirstServeCPUScheduler(toArray(processes));
@@ -109,7 +136,7 @@ public class SchedulingApplication {
                 scheduler = new ShortestJobFirstCPUScheduler(toArray(processes));
                 break;
             case "C":
-                List<Integer> priorities = loopInput("Input individual priority number: ", "Prio", processes.size(), sc);
+                List<Integer> priorities = loopInput("Input individual priority number (lowest is higher): ", "Prio", processes.size(), sc);
                 IntStream.range(0, processes.size()).forEach( index -> processes.get(index).setPriority( priorities.get(index) ) );
                 scheduler = new NonPreemptivePriorityCPUScheduler(toArray(processes));
                 break;
@@ -122,21 +149,28 @@ public class SchedulingApplication {
 
     public CPUScheduler displayPreemptiveCPUSchedulingMenu(List<ExtendedProcess> processes, Scanner sc) {
         CPUScheduler scheduler = null;
-        // TODO prompt for preemptive or non
         displayCPUSchedulingAlgorithmsMenu( SchedulerType.PREEMPTIVE );
-        String choice = input("Enter choice: ", sc);
+        String choice = "";
+
+        do {
+            choice = input("Enter choice: ", sc);
+        }while( !isChoiceInTheChoices(choice, "A", "B", "C", "D") );
 
         switch(choice.trim()) {
             case "A":
                 scheduler = new ShortestRemainingTimeFirstCPUScheduler(toArray(processes));
                 break;
             case "B":
-                String timeSlice = input("Input time slice: ", sc);
+                String timeSlice = "";
+                do{
+                    timeSlice = input("Input time slice: ", sc);
+                }while(!isValidInteger(timeSlice));
+
                 BigInteger quantum = BigInteger.valueOf(Integer.parseInt( timeSlice ));
                 scheduler = new RoundRobinCPUScheduler(toArray(processes), quantum);
                 break;
             case "C":
-                List<Integer> priorities = loopInput("Input individual priority number: ", "Prio", processes.size(), sc);
+                List<Integer> priorities = loopInput("Input individual priority number (lowest is higher): ", "Prio", processes.size(), sc);
                 IntStream.range(0, processes.size()).forEach( index -> processes.get(index).setPriority( priorities.get(index) ) );
                 scheduler = new PreemptivePriorityCPUScheduler(toArray(processes));
                 break;
@@ -146,10 +180,18 @@ public class SchedulingApplication {
 
         }
 
-        System.out.println("is here");
-
         return scheduler;
 
+    }
+
+    public static boolean isChoiceInTheChoices( final String choice, String... otherChoices ) {
+        for( String otherChoice : otherChoices ) {
+            if( choice.equalsIgnoreCase( otherChoice ) ) return true;
+        }
+
+        pln("Your choice of \"" + choice + "\" is not found. Please choose a valid choice.");
+
+        return false;
     }
 
     public ExtendedProcess[] toArray( List<ExtendedProcess> processes ) {
@@ -173,13 +215,11 @@ public class SchedulingApplication {
 
     public static String input(final String prompt, Scanner sc )  {
         p(prompt);
-
         return sc.nextLine();
     }
 
     public static String input(final String prompt, Scanner sc, Class<?> klass) {
         p(prompt);
-        //TODO
         return sc.nextLine();
     }
 
@@ -201,8 +241,8 @@ public class SchedulingApplication {
 
         }else{
             schedulingMenu.append("[A] First Come First Serve (FCFS)\n")
-                    .append("[B] Non Preemptive Priority (Non-P Prio)\n")
-                    .append("[C] Shortest Job First (SJF)\n");
+                    .append("[B] Shortest Job First (SJF)\n")
+                    .append("[C] Non Preemptive Priority (Non-P Prio) \n");
         }
 
         schedulingMenu.append("[D] Exit\n");
@@ -217,12 +257,36 @@ public class SchedulingApplication {
         }
 
         for( int i = 0; i < totalNumberOfInputs; i++ ) {
-            inputs.add( Integer.parseInt(input(promptMessageElement + (i+1) + ": ", sc)) );
+            String inputString = "";
+            do {
+                inputString = input(promptMessageElement + (i+1) + ": ", sc);
+            }while( !isValidInteger(inputString) );
+
+            inputs.add( Integer.parseInt( inputString ) );
         }
 
         return inputs;
     }
 
+    public static List<Integer> loopInputWithRangeValidation(final String promptMessage, final String promptMessageElement, final int totalNumberOfInputs, Scanner sc,
+                                                             int low, int high) {
+        List<Integer> inputs = new ArrayList<>();
+
+        if( Objects.nonNull(promptMessage) && !promptMessage.isEmpty() ) {
+            pln(promptMessage);
+        }
+
+        for( int i = 0; i < totalNumberOfInputs; i++ ) {
+            String inputString = "";
+            do {
+                inputString = input(promptMessageElement + (i+1) + ": ", sc);
+            }while( !isWithinRange(inputString, low, high) );
+
+            inputs.add( Integer.parseInt( inputString ) );
+        }
+
+        return inputs;
+    }
 
 
 
