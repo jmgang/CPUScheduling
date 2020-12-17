@@ -42,4 +42,23 @@ public class RoundRobinTest {
         assertArrayEquals( cpuScheduler.getWaitingTimes(), new int[]{17, 5, 17, 20} );
         assertArrayEquals( cpuScheduler.getTurnAroundTimes(), new int[]{25, 10, 27, 31} );
     }
+
+    @Test
+    public void testRoundRobin_valid_1() {
+        ExtendedProcess[] processes = {
+                new ExtendedProcess( 8, 0),
+                new ExtendedProcess( 6, 2),
+                new ExtendedProcess( 3,3),
+                new ExtendedProcess( 9, 5 ),
+                new ExtendedProcess( 3, 6 )
+        };
+        cpuScheduler = new RoundRobinCPUScheduler( processes, BigInteger.valueOf(3) );
+        cpuScheduler.computeSchedulingTimes();
+
+        System.out.println(Arrays.toString( cpuScheduler.getWaitingTimes() ));
+        System.out.println(Arrays.toString( cpuScheduler.getTurnAroundTimes() ));
+
+//        assertArrayEquals( cpuScheduler.getWaitingTimes(), new int[]{17, 5, 17, 20} );
+//        assertArrayEquals( cpuScheduler.getTurnAroundTimes(), new int[]{25, 10, 27, 31} );
+    }
 }
