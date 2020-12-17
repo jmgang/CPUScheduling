@@ -1,5 +1,6 @@
 package main.java.com.scheduling.cpu.preemptive;
 
+import main.java.com.scheduling.cpu.base.CPUComplexScheduler;
 import main.java.com.scheduling.cpu.process.ExtendedProcess;
 import main.java.com.scheduling.cpu.process.compare.ExtendedProcessArrivalTimeComparator;
 import main.java.com.scheduling.cpu.base.CPUScheduler;
@@ -9,17 +10,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-public class RoundRobinCPUScheduler extends CPUScheduler {
+public class RoundRobinCPUScheduler extends CPUComplexScheduler {
 
     private ExtendedProcess[] extendedProcesses;
 
     private BigInteger quantum;
-    protected Queue<ExtendedProcess> readyQueue;
-
-    protected Map<Integer, ExtendedProcess> ganttChart;
-
-    protected Queue<ExtendedProcess> jobQueue;
-
 
     public RoundRobinCPUScheduler(ExtendedProcess[] extendedProcesses, BigInteger quantum ) {
         super( extendedProcesses.length );
@@ -30,12 +25,12 @@ public class RoundRobinCPUScheduler extends CPUScheduler {
     }
 
     @Override
-    protected void sortByArrivalTime() {
+    public void sortByArrivalTime() {
         Arrays.sort( extendedProcesses, new ExtendedProcessArrivalTimeComparator());
     }
 
     @Override
-    public void computeWaitingTime() {
+    public void buildGanttChart() {
         sortByArrivalTime();
         setRemainingTimes(extendedProcesses);
 
@@ -91,10 +86,13 @@ public class RoundRobinCPUScheduler extends CPUScheduler {
     }
 
     @Override
+    public void computeWaitingTime() {
+
+    }
+
+    @Override
     public void computeTurnAroundTime() {
         checkIfWaitingTimeIsComputed();
-        computeCompletionTimes();
-        sortBackByProcessId();
         for(int i=0; i < numberOfProcesses.intValue() ;i++){
             turnAroundTimes[i]= completionTimes[i] - extendedProcesses[i].getArrivalTime();
             waitingTimes[i] = turnAroundTimes[i] - extendedProcesses[i].getBurstTime();
@@ -102,36 +100,14 @@ public class RoundRobinCPUScheduler extends CPUScheduler {
 
     }
 
-    protected void computeCompletionTimes() {
-
-//        System.out.println("Gannt Chart:");
-//        for( Map.Entry<Integer, ExtendedProcess> entry : ganttChart.entrySet() ) {
-//            System.out.println("t=" + entry.getKey() + ",p=" + entry.getValue());
-//        }
-
-        Integer[] keys = ganttChart.keySet().toArray( new Integer[ganttChart.keySet().size()] );
-        Set<ExtendedProcess> processesWithCompletionTime = new HashSet<>();
-
-        for( int i = 1; i < keys.length; i++ ) {
-            ExtendedProcess process = ganttChart.get( keys[i-1] );
-            process.setCompletionTime(keys[i]);
-            processesWithCompletionTime.add( process );
-        }
-
-        processesWithCompletionTime.forEach( p -> {
-            completionTimes[p.getProcessId().intValue()-1] = p.getCompletionTime();
-        });
-//
-//        System.out.println("\nCompletion Times: ");
-//        System.out.println(Arrays.toString(completionTimes));
-    }
-
-    private boolean canProcessStillExecute( ExtendedProcess currentProcess ) {
+    @Override
+    protected boolean canProcessStillExecute( ExtendedProcess currentProcess ) {
         if( Objects.isNull(currentProcess) ) return false;
         return currentProcess.getRemainingTime() > 0;
     }
 
-    private void sortBackByProcessId() {
+    @Override
+    protected void sortBackByProcessId() {
         Arrays.sort(extendedProcesses, new Comparator<ExtendedProcess>() {
             @Override
             public int compare(ExtendedProcess o1, ExtendedProcess o2) {

@@ -33,4 +33,9 @@ public class FirstComeFirstServeCPUScheduler extends CPUScheduler {
             turnAroundTimes[i] = processes[i].getBurstTime() + waitingTimes[i];
         }
     }
+
+    @Override
+    public void sortByArrivalTime() {
+
+    }
 }

@@ -1,16 +1,12 @@
 package main.java.com.scheduling.cpu.preemptive;
 
-import main.java.com.scheduling.cpu.base.CPUPriorityScheduler;
+import main.java.com.scheduling.cpu.base.CPUComplexScheduler;
 import main.java.com.scheduling.cpu.process.ExtendedProcess;
-import main.java.com.scheduling.cpu.base.CPUScheduler;
-import main.java.com.scheduling.cpu.process.SimpleProcess;
 import main.java.com.scheduling.cpu.process.compare.ExtendedProcessArrivalTimeComparator;
-import main.java.com.scheduling.cpu.process.compare.ExtendedProcessPriorityComparator;
 
-import java.math.BigDecimal;
 import java.util.*;
 
-public class PreemptivePriorityCPUScheduler extends CPUPriorityScheduler {
+public class PreemptivePriorityCPUScheduler extends CPUComplexScheduler {
 
     private ExtendedProcess[] processes;
 
@@ -20,11 +16,12 @@ public class PreemptivePriorityCPUScheduler extends CPUPriorityScheduler {
     }
 
     @Override
-    protected void sortByArrivalTime() {
+    public void sortByArrivalTime() {
         Arrays.sort( processes, new ExtendedProcessArrivalTimeComparator() );
     }
 
-    protected void buildGanttChart() {
+    @Override
+    public void buildGanttChart() {
         sortByArrivalTime();
         jobQueue = new LinkedList<>( Arrays.asList(processes) );
         int time = 0;

@@ -1,91 +1,157 @@
 package main.java.com.scheduling.cpu.preemptive;
 
+import main.java.com.scheduling.cpu.base.CPUComplexScheduler;
 import main.java.com.scheduling.cpu.base.CPUScheduler;
 import main.java.com.scheduling.cpu.process.ExtendedProcess;
 
 import java.math.BigDecimal;
+import java.util.*;
 
-public class ShortestRemainingTimeFirstCPUScheduler extends CPUScheduler {
+public class ShortestRemainingTimeFirstCPUScheduler extends CPUComplexScheduler {
+
+    ExtendedProcess[] processes;
 
     public ShortestRemainingTimeFirstCPUScheduler(ExtendedProcess[] extendedProcesses) {
         super( extendedProcesses.length );
-        setProcesses(extendedProcesses);
-        setRemainingTimes(extendedProcesses);
+        this.processes = extendedProcesses;
+        readyQueue = new PriorityQueue<>(new Comparator<ExtendedProcess>() {
+            @Override
+            public int compare(ExtendedProcess o1, ExtendedProcess o2) {
+                if( o1.getBurstTime() < o2.getBurstTime() ) {
+                    return -1;
+                }else {
+                    return 1;
+                }
+            }
+        });
+        ganttChart = new LinkedHashMap<>();
+    }
+
+    @Override
+    public void sortByArrivalTime() {
+        Arrays.sort(processes, new Comparator<ExtendedProcess>() {
+            @Override
+            public int compare(ExtendedProcess p1, ExtendedProcess p2) {
+                if (p1.getArrivalTime() < p2.getArrivalTime())
+                    return (-1);
+                else if (p1.getArrivalTime() == p2.getArrivalTime() && p1.getBurstTime() < p2.getBurstTime())
+                    return (-1);
+                else
+                    return (1);
+            }
+        });
+    }
+
+    // 1=arrival, 2=burst, 3=1+2=completion, 5=3-1=tat, 4=5-2=tat-burst=waiting
+    @Override
+    public void buildGanttChart() {
+//        System.out.println(Arrays.toString(processes));
+        jobQueue = new LinkedList<>( Arrays.asList(processes) );
+        int time = processes[0].getArrivalTime();
+        ExtendedProcess currentProcess = jobQueue.remove();
+        ganttChart.put( time, currentProcess );
+
+        while(true) {
+
+            while( canProcessStillExecute(currentProcess) ) {
+//                System.out.println("TIME = " + time);
+//                System.out.println("current: P" + currentProcess.getProcessId());
+//                System.out.println("Job Queue: " + jobQueue);
+//                System.out.println("Ready Queue: " + readyQueue);
+
+                if( !jobQueue.isEmpty() && time == jobQueue.peek().getArrivalTime()) {
+//                    System.out.println("Process P" + jobQueue.peek().getProcessId() + " is arriving...");
+                    ExtendedProcess potentialNextProcess = jobQueue.remove();
+                    ExtendedProcess nextProcess = getLeastRemainingBurstTime( currentProcess, potentialNextProcess );
+//                    System.out.println("PotentialNextProcess from JobQ: P" + potentialNextProcess.getProcessId());
+//                    System.out.println("Next Process: P" + nextProcess.getProcessId());
+                    if( nextProcess.getProcessId().compareTo( currentProcess.getProcessId() ) != 0 ) {
+                        readyQueue.add( currentProcess );
+                        currentProcess = nextProcess;
+//                        System.out.println("NEW CURRENT PROCESS: P" + nextProcess.getProcessId());
+                        ganttChart.put( time, currentProcess );
+                    }
+
+                    if( nextProcess.getProcessId().compareTo( potentialNextProcess.getProcessId() ) != 0 ) {
+                        readyQueue.add( potentialNextProcess );
+                    }
+                }
+
+                currentProcess.execute();
+
+//                System.out.println("remaining time for current process: " + currentProcess.getRemainingTime());
+//                System.out.println();
+                time++;
+            }
+
+            if( !readyQueue.isEmpty() ) {
+                currentProcess = readyQueue.remove();
+                ganttChart.put( time, currentProcess );
+            }
+            if(readyQueue.isEmpty() && jobQueue.isEmpty() && !canProcessStillExecute(currentProcess)) break;
+
+        }
+
+        ganttChart.put( time, currentProcess );
     }
 
     @Override
     public void computeWaitingTime() {
 
-        int complete = 0, t = 0, minm = Integer.MAX_VALUE;
-        int shortest = 0, finish_time;
-        boolean check = false;
-
-        // Process until all processes gets
-        // completed
-        while (complete != this.numberOfProcesses.intValue()) {
-
-            // Find process with minimum
-            // remaining time among the
-            // processes that arrives till the
-            // current time`
-            for (int j = 0; j < this.numberOfProcesses.intValue(); j++)
-            {
-                if ((simpleProcesses[j].getArrivalTime() <= t) &&
-                        (remainingTimes[j] < minm) && remainingTimes[j] > 0) {
-                    minm = remainingTimes[j];
-                    shortest = j;
-                    check = true;
-                }
-            }
-
-            if (check == false) {
-                t++;
-                continue;
-            }
-
-            // Reduce remaining time by one
-            remainingTimes[shortest]--;
-
-            // Update minimum
-            minm = remainingTimes[shortest];
-            if (minm == 0) {
-                minm = Integer.MAX_VALUE;
-            }
-
-            // If a process gets completely
-            // executed
-            if (remainingTimes[shortest] == 0) {
-
-                // Increment complete
-                complete++;
-                check = false;
-
-                // Find finish time of current
-                // process
-                finish_time = t + 1;
-
-                // Calculate waiting time
-                waitingTimes[shortest] = finish_time -
-                        simpleProcesses[shortest].getBurstTime() -
-                        simpleProcesses[shortest].getArrivalTime();
-
-                if (waitingTimes[shortest] < 0) {
-                    waitingTimes[shortest] = 0;
-                }
-
-            }
-            // Increment time
-            t++;
-        }
     }
 
     @Override
     public void computeTurnAroundTime() {
         checkIfWaitingTimeIsComputed();
-        for (int i = 0; i < this.numberOfProcesses.intValue(); i++) {
-            turnAroundTimes[i] = simpleProcesses[i].getBurstTime() + waitingTimes[i];
+        for(int i=0; i < numberOfProcesses.intValue() ;i++){
+//            System.out.println("i: " + i);
+//            System.out.println(processes[i] + ", ct=" + completionTimes[i] + "\n");
+            turnAroundTimes[i]= completionTimes[i] - processes[i].getArrivalTime();
+            waitingTimes[i] = turnAroundTimes[i] - processes[i].getBurstTime();
+        }
+    }
+
+    private ExtendedProcess getLeastRemainingBurstTime( ExtendedProcess currentProcess, ExtendedProcess potentialNextProcess ) {
+        ExtendedProcess nextProcess = potentialNextProcess;
+
+//        System.out.println("Current P" + currentProcess.getProcessId() + " < Potential P" + potentialNextProcess.getProcessId() + "? "  +
+//               currentProcess.getRemainingTime() + " < " + potentialNextProcess.getRemainingTime() + " => " +
+//                (currentProcess.getRemainingTime() < potentialNextProcess.getRemainingTime()) );
+        if( currentProcess.getRemainingTime() < potentialNextProcess.getRemainingTime() ) {
+            nextProcess = currentProcess;
         }
 
+        if( !readyQueue.isEmpty() ) {
+//            System.out.println("Next in ready queue: P" + readyQueue.peek().getProcessId() );
+//            System.out.println("? => " + (( nextProcess.getRemainingTime() > readyQueue.peek().getRemainingTime() ) ||
+//                    ( nextProcess.getRemainingTime() == readyQueue.peek().getRemainingTime() &&
+//                            readyQueue.peek().getArrivalTime() < nextProcess.getArrivalTime() )   ));
+
+            if( ( nextProcess.getRemainingTime() > readyQueue.peek().getRemainingTime() ) ||
+                    ( nextProcess.getRemainingTime() == readyQueue.peek().getRemainingTime() &&
+                            readyQueue.peek().getArrivalTime() < nextProcess.getArrivalTime() )   ) {
+                nextProcess = readyQueue.remove();
+            }
+        }
+
+        return nextProcess;
+    }
+
+    @Override
+    protected void sortBackByProcessId() {
+        Arrays.sort(processes, new Comparator<ExtendedProcess>() {
+            @Override
+            public int compare(ExtendedProcess o1, ExtendedProcess o2) {
+                if(o1.getProcessId().compareTo( o2.getProcessId() ) < 0) {
+                    return -1;
+                }
+                else if( o1.getProcessId().compareTo(o2.getProcessId()) > 0 ) {
+                    return 1;
+                }else{
+                    return 0;
+                }
+            }
+        });
     }
 
 

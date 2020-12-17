@@ -5,7 +5,7 @@ import main.java.com.scheduling.cpu.process.compare.ExtendedProcessPriorityCompa
 
 import java.util.*;
 
-public abstract class CPUPriorityScheduler extends CPUScheduler {
+public abstract class CPUComplexScheduler extends CPUScheduler {
 
     protected Queue<ExtendedProcess> readyQueue;
 
@@ -13,7 +13,7 @@ public abstract class CPUPriorityScheduler extends CPUScheduler {
 
     protected Queue<ExtendedProcess> jobQueue;
 
-    protected CPUPriorityScheduler(int numberOfProcesses) {
+    protected CPUComplexScheduler(int numberOfProcesses) {
         super(numberOfProcesses);
         readyQueue = new PriorityQueue<>(new ExtendedProcessPriorityComparator());
         ganttChart = new LinkedHashMap<>();
@@ -59,6 +59,8 @@ public abstract class CPUPriorityScheduler extends CPUScheduler {
 
 //        System.out.println("\nCompletion Times: ");
 //        System.out.println(Arrays.toString(completionTimes));
+
+
     }
 
     protected abstract void sortBackByProcessId();

@@ -44,9 +44,7 @@ public abstract class CPUScheduler implements SchedulingManager {
         }
     }
 
-    protected void sortByArrivalTime() {
-        Arrays.sort( simpleProcesses, new SimpleProcessArrivalTimeComparator());
-    }
+    public abstract void sortByArrivalTime();
 
     public BigDecimal getAverageWaitingTime() {
         return BigDecimal.valueOf(Arrays.stream(waitingTimes).average().orElse(0.0));

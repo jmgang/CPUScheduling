@@ -1,18 +1,14 @@
 package main.java.com.scheduling.cpu.nonpreemptive;
 
-import main.java.com.scheduling.cpu.base.CPUPriorityScheduler;
-import main.java.com.scheduling.cpu.base.CPUScheduler;
+import main.java.com.scheduling.cpu.base.CPUComplexScheduler;
 import main.java.com.scheduling.cpu.process.ExtendedProcess;
 import main.java.com.scheduling.cpu.process.compare.ExtendedProcessArrivalTimeComparator;
-import main.java.com.scheduling.cpu.process.compare.ExtendedProcessPriorityComparator;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.Map;
 
-public class NonPreemptivePriorityCPUScheduler extends CPUPriorityScheduler {
+public class NonPreemptivePriorityCPUScheduler extends CPUComplexScheduler {
 
     private ExtendedProcess[] processes;
 
@@ -22,7 +18,7 @@ public class NonPreemptivePriorityCPUScheduler extends CPUPriorityScheduler {
     }
 
     @Override
-    protected void sortByArrivalTime() {
+    public void sortByArrivalTime() {
         Arrays.sort( processes, new ExtendedProcessArrivalTimeComparator() );
     }
 
@@ -44,7 +40,7 @@ public class NonPreemptivePriorityCPUScheduler extends CPUPriorityScheduler {
     }
 
     @Override
-    protected void buildGanttChart() {
+    public void buildGanttChart() {
         sortByArrivalTime();
         jobQueue = new LinkedList<>( Arrays.asList(processes) );
         int time = 0;
